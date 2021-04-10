@@ -1,15 +1,17 @@
-package meeting.calender.assistant.app.dto;
+package meeting.calender.assistant.app.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Participant {
+public class ParticipantCalendar {
     private String participantId;
-    private String name;
+    private List<Meeting> meetings;
 }
