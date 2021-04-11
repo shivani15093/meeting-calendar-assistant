@@ -1,13 +1,15 @@
 package meeting.calender.assistant.app.service.impl;
 
-import meeting.calender.assistant.app.model.*;
+import meeting.calender.assistant.app.model.AllCalendars;
+import meeting.calender.assistant.app.model.Meeting;
+import meeting.calender.assistant.app.model.ParticipantCalendar;
+import meeting.calender.assistant.app.model.TimeInterval;
 import meeting.calender.assistant.app.service.business.FreeSlotManagerService;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
+@Service
 public class FreeSlotManagerServiceImpl implements FreeSlotManagerService {
     AllCalendars allCalendars = AllCalendars.getInstance();
     @Override
@@ -15,33 +17,75 @@ public class FreeSlotManagerServiceImpl implements FreeSlotManagerService {
         ParticipantCalendar part1 = allCalendars.getParticipantCalendarByPartId(p1Id);
         ParticipantCalendar part2 = allCalendars.getParticipantCalendarByPartId(p2Id);
         List<TimeInterval> intervals = createAllTimeIntervalsList(part1, part2);
-        intervals.sort(TimeInterval::compareTo);
         List<TimeInterval> freeTimeSlots = getNonOverLappingSlots(intervals, duration);
         return freeTimeSlots;
     }
     private List<TimeInterval> getNonOverLappingSlots(List<TimeInterval> intervals, double duration){
         List<TimeInterval> freeTimeSlots = new ArrayList<>();
-        for(int i=0; i<intervals.size()-1; i++){
-            Date endTime = intervals.get(i).getEndTime();
-            Date startTime = intervals.get(i+1).getStartTime();
-            if(endTime.before(startTime)
-                    && getTimeDiffInMins(startTime, endTime) >= duration){
-                Date s = endTime;
-                Date e = startTime;
-                while(true){
-                    int hours = (int)duration/60;
-                    int minutes = (int) (duration-(hours*60));
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(s);
-                    cal.add(Calendar.HOUR, hours);
-                    cal.add(Calendar.MINUTE, minutes);
-                    e = cal.getTime();
-                    if(s.before(startTime) && (e.before(startTime) || e.equals(startTime))){
-                        freeTimeSlots.add(new TimeInterval(s, e));
-                    }else{
-                        break;
+
+        //check from beginning to end
+        Map<Integer, List<TimeInterval>> dayMap = new HashMap<>();
+        for(TimeInterval ti : intervals){
+            if(dayMap.containsKey(ti.getStartTime().getDate())){
+                List<TimeInterval> t = dayMap.get(ti.getStartTime().getDate());
+                t.add(ti);
+                dayMap.put(ti.getStartTime().getDate(), t);
+            }else{
+                List<TimeInterval> t = new ArrayList<>();
+                t.add(ti);
+                dayMap.put(ti.getStartTime().getDate(), t);
+            }
+        }
+        for(Map.Entry<Integer, List<TimeInterval>> entry : dayMap.entrySet()){
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(entry.getValue().get(0).getStartTime());
+            cal.set(Calendar.HOUR_OF_DAY, 00);
+            cal.set(Calendar.MINUTE, 00);
+            Date start1 = cal.getTime();
+            cal.set(Calendar.HOUR_OF_DAY, 10);
+            cal.set(Calendar.MINUTE, 00);
+            Date end1 = cal.getTime();
+            TimeInterval startPadding = TimeInterval.builder()
+                    .startTime(start1)
+                    .endTime(end1)
+                    .build();
+            cal.set(Calendar.HOUR_OF_DAY, 20);
+            cal.set(Calendar.MINUTE, 00);
+            Date start2 = cal.getTime();
+            cal.set(Calendar.HOUR_OF_DAY, 23);
+            cal.set(Calendar.MINUTE, 59);
+            Date end2 = cal.getTime();
+            TimeInterval endPadding = TimeInterval.builder()
+                    .startTime(start2)
+                    .endTime(end2)
+                    .build();
+            entry.getValue().add(startPadding);
+            entry.getValue().add(endPadding);
+            entry.getValue().sort(TimeInterval::compareTo);
+        }
+        for(Map.Entry<Integer, List<TimeInterval>> entry : dayMap.entrySet()){
+            for(int i=0; i< entry.getValue().size()-1; i++){
+                Date endTime = entry.getValue().get(i).getEndTime();
+                Date startTime = entry.getValue().get(i+1).getStartTime();
+                if(endTime.before(startTime)
+                        && getTimeDiffInMins(startTime, endTime) >= duration){
+                    Date s = endTime;
+                    Date e = startTime;
+                    while(true){
+                        int hours = (int)duration/60;
+                        int minutes = (int) (duration-(hours*60));
+                        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("IST"));
+                        cal.setTime(s);
+                        cal.add(Calendar.HOUR, hours);
+                        cal.add(Calendar.MINUTE, minutes);
+                        e = cal.getTime();
+                        if(s.before(startTime) && (e.before(startTime) || e.equals(startTime))){
+                            freeTimeSlots.add(new TimeInterval(s, e));
+                        }else{
+                            break;
+                        }
+                        s=e;
                     }
-                    s=e;
                 }
             }
         }

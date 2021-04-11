@@ -22,6 +22,14 @@ public class AllMeetings {
         }
         return singleInstance;
     }
+    public Meeting getMeetingByMeetId(String meetId){
+        for(Meeting m : getInstance().getMeetings()){
+            if(m.getMeetingId().equalsIgnoreCase(meetId)){
+                return m;
+            }
+        }
+        return null;
+    }
     public void addMeetingToAllMeetings(Meeting meeting){
         getInstance().getMeetings().add(meeting);
     }

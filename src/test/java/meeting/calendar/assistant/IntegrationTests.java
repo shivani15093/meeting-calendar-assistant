@@ -131,7 +131,7 @@ public class IntegrationTests {
 //        meetingBookingService.bookMeeting(m4);
 //        meetingBookingService.bookMeeting(m5);
         List<TimeInterval> fs = freeSlotManagerService.fetchFreeSlots("part_1_0101", "part_2_0101", 30);
-        Assert.assertEquals(4, fs.size());
+        Assert.assertEquals(9, fs.size());
     }
     MeetingConflictsService meetingConflictsService = new MeetingConflictServiceImpl();
     @Test
@@ -141,7 +141,7 @@ public class IntegrationTests {
 //        meetingBookingService.bookMeeting(m3);
 //        meetingBookingService.bookMeeting(m4);
 //        meetingBookingService.bookMeeting(m5);
-        List<String> conflictingParticipants = meetingConflictsService.getConflictingParticipantsFor(m3);
+        List<String> conflictingParticipants = meetingConflictsService.getConflictingParticipantsFor(m3.getMeetingId());
         Assert.assertEquals(1, conflictingParticipants.size());
         Assert.assertEquals("part_2_0101", conflictingParticipants.get(0));
     }

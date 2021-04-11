@@ -5,14 +5,17 @@ import meeting.calender.assistant.app.model.AllMeetings;
 import meeting.calender.assistant.app.model.Meeting;
 import meeting.calender.assistant.app.model.ParticipantCalendar;
 import meeting.calender.assistant.app.service.business.MeetingConflictsService;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Service
 public class MeetingConflictServiceImpl implements MeetingConflictsService {
     AllCalendars allCalendars = AllCalendars.getInstance();
+    AllMeetings allMeetings = AllMeetings.getInstance();
     @Override
-    public List<String> getConflictingParticipantsFor(Meeting meeting) {
+    public List<String> getConflictingParticipantsFor(String meetId) {
+        Meeting meeting = allMeetings.getMeetingByMeetId(meetId);
         List<String> conflictingParticipants = new ArrayList<>();
         for(String partId : meeting.getParticipantIds()){
             if(isConflict(partId, meeting)){
