@@ -17,7 +17,20 @@ public class FreeSlotManagerServiceImpl implements FreeSlotManagerService {
         ParticipantCalendar part1 = allCalendars.getParticipantCalendarByPartId(p1Id);
         ParticipantCalendar part2 = allCalendars.getParticipantCalendarByPartId(p2Id);
         List<TimeInterval> intervals = createAllTimeIntervalsList(part1, part2);
-        List<TimeInterval> freeTimeSlots = getNonOverLappingSlots(intervals, duration);
+        List<TimeInterval> freeTimeSlots = new ArrayList<>();
+        if(intervals.size()>0){
+            freeTimeSlots = getNonOverLappingSlots(intervals, duration);
+        }
+        else{
+            Calendar cal = Calendar.getInstance();
+            Date start = cal.getTime();
+            cal.set(Calendar.HOUR_OF_DAY, 20);
+            cal.set(Calendar.MINUTE, 00);
+            Date end = cal.getTime();
+            TimeInterval ti  = TimeInterval.builder().startTime(start).endTime(end).build();
+            freeTimeSlots.add(ti);
+        }
+
         return freeTimeSlots;
     }
     private List<TimeInterval> getNonOverLappingSlots(List<TimeInterval> intervals, double duration){
